@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Influ AI Content Management API
+  title: Influ AI Content Generation API
   description: API documentation for managing content on Influ AI, including content generation, fetching, updates, and downloads.
   version: "1.0"
 
