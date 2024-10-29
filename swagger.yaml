@@ -109,9 +109,6 @@ paths:
                   content_id:
                     type: string
                     example: "generated_content_id"
-                  message:
-                    type: string
-                    example: "Content generation started"
         '429':
           description: Rate limit exceeded.
       security:
@@ -149,9 +146,6 @@ paths:
                   status:
                     type: string
                     example: "submitted"
-                  message:
-                    type: string
-                    example: "Content regeneration started"
         '429':
           description: Rate limit exceeded.
       security:
@@ -181,17 +175,6 @@ paths:
       responses:
         '200':
           description: Feedback submitted successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "success"
-                  message:
-                    type: string
-                    example: "Feedback submitted"
       security:
         - bearerAuth: []
 
