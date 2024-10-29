@@ -59,7 +59,7 @@ paths:
 
   /suggestions/{id}:
     get:
-      summary: Get Content Details
+      summary: Get Suggestion Details
       description: Retrieve detailed information for a specific piece of generated content.
       parameters:
         - name: id
