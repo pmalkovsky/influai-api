@@ -57,6 +57,25 @@ paths:
       security:
         - bearerAuth: []
 
+  /content/{id}:
+    get:
+      summary: Get Content Details
+      description: Retrieve detailed information for a specific piece of generated content.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: The unique identifier of the content
+      responses:
+        '200':
+          description: Detailed content information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentDetails'
+
   /content/generate:
     post:
       summary: Generate New Content
@@ -196,16 +215,16 @@ components:
           type: string
           format: date
           example: "2024-04-05"
+        status:
+          type: string
+          enum: ["submitted", "in_progress", "available"]
+          example: "available"
         title:
           type: string
           example: "Content title"
         text:
           type: string
           example: "Description of the content"
-        status:
-          type: string
-          enum: ["submitted", "in_progress", "available"]
-          example: "available"
         media:
           type: array
           items:
