@@ -38,7 +38,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ContentDetails'
+                      $ref: '#/components/schemas/Suggestion'
                   pagination:
                     type: object
                     properties:
@@ -74,7 +74,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContentDetails'
+                $ref: '#/components/schemas/Suggestion'
       security:
         - bearerAuth: []
 
