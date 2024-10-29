@@ -1,13 +1,13 @@
 openapi: 3.0.0
 info:
-  title: Influ AI Content Generation API
-  description: API documentation for managing content on Influ AI, including content generation, fetching, updates, and downloads.
+  title: Influ AI Suggestions Generation API
+  description: API documentation for managing content on Influ AI, including suggestions generation, fetching, updates, and downloads.
   version: "1.0"
 
 paths:
-  /content:
+  /suggestions:
     get:
-      summary: Fetch User Content (Generations)
+      summary: Fetch User Suggestions (Generations)
       description: Retrieve a paginated list of generated content by the user.
       parameters:
         - name: limit
@@ -57,7 +57,7 @@ paths:
       security:
         - bearerAuth: []
 
-  /content/{id}:
+  /suggestions/{id}:
     get:
       summary: Get Content Details
       description: Retrieve detailed information for a specific piece of generated content.
@@ -78,9 +78,9 @@ paths:
       security:
         - bearerAuth: []
 
-  /content/generate:
+  /suggestions/generate:
     post:
-      summary: Generate New Content
+      summary: Generate New Suggestion
       description: Create a new piece of content based on selected options, such as "Smart Script," "Custom Script," or "Video."
       requestBody:
         required: true
@@ -89,7 +89,7 @@ paths:
             schema:
               type: object
               properties:
-                content_type:
+                suggestion_type:
                   type: string
                   enum: ["smart_script", "custom_script", "video"]
                 user_input:
@@ -97,7 +97,7 @@ paths:
                   description: "Details provided by the user for custom requests"
       responses:
         '202':
-          description: Content generation initiated successfully.
+          description: Suggestion generation initiated successfully.
           content:
             application/json:
               schema:
@@ -106,18 +106,18 @@ paths:
                   status:
                     type: string
                     example: "submitted"
-                  content_id:
+                  suggestion_id:
                     type: string
-                    example: "generated_content_id"
+                    example: "generated_suggestion_id"
         '429':
           description: Rate limit exceeded.
       security:
         - bearerAuth: []
 
-  /content/{id}/regenerate:
+  /suggestions/{id}/regenerate:
     post:
-      summary: Regenerate Content
-      description: Initiates a regeneration process for the specified content. This is a non-idempotent operation and may produce a new result with each request.
+      summary: Regenerate Suggestion
+      description: Initiates a regeneration process for the specified suggestion. This is a non-idempotent operation and may produce a new result with each request.
       parameters:
         - name: id
           in: path
@@ -137,7 +137,7 @@ paths:
                   description: "Prompt or new caption"
       responses:
         '202':
-          description: Content regeneration started successfully.
+          description: Suggestion regeneration started successfully.
           content:
             application/json:
               schema:
@@ -151,10 +151,10 @@ paths:
       security:
         - bearerAuth: []
 
-  /content/{id}/feedback:
+  /suggestions/{id}/feedback:
     post:
       summary: Content Feedback (Thumbs Up/Down)
-      description: Allows users to provide feedback on generated content, such as a thumbs-up or thumbs-down.
+      description: Allows users to provide feedback on suggestions, such as a thumbs-up or thumbs-down.
       parameters:
         - name: id
           in: path
@@ -186,12 +186,12 @@ components:
       bearerFormat: JWT
 
   schemas:
-    ContentDetails:
+    Suggestion:
       type: object
       properties:
         id:
           type: string
-          example: "content_id"
+          example: "suggestion_id"
         type:
           type: string
           enum: ["smart_script", "custom_script", "video"]
@@ -206,10 +206,10 @@ components:
           example: "available"
         title:
           type: string
-          example: "Content title"
+          example: "Suggestion title"
         text:
           type: string
-          example: "Description of the content"
+          example: "Description of the suggestion"
         media:
           type: array
           items:
