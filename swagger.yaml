@@ -18,11 +18,11 @@ tags:
 
 paths:
   # Authentication
-  /login/access-token:
+  /login:
     post:
       tags:
         - auth
-      summary: Login Get Access Token
+      summary: Login
       description: OAuth2 compatible token login, get an access token for future requests
       requestBody:
         required: true
