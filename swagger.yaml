@@ -44,7 +44,7 @@ paths:
   /users/web:
     post:
       tags:
-        - users
+        - auth
       summary: Create Web User
       description: Create new web user with email and password authentication
       requestBody:
