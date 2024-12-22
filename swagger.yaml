@@ -74,27 +74,6 @@ paths:
           description: Invalid input or email already registered
 
   # User Subscription
-  /user/subscription:
-    get:
-      tags:
-        - subscription
-      summary: Get Current User's Subscription
-      description: Get details about current user's subscription status and limits
-      responses:
-        '200':
-          description: Current subscription information
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  subscription:
-                    $ref: '#/components/schemas/Subscription'
-        '404':
-          description: No active subscription found
-      security:
-        - bearerAuth: []
-
   /user/subscription/confirm:
     post:
       tags:
@@ -623,6 +602,9 @@ components:
           description: User's preferred language
         is_active:
           type: boolean
+        subscription:
+          $ref: '#/components/schemas/Subscription'
+          description: Current subscription information, null if no active subscription
         created_at:
           type: string
           format: date-time
