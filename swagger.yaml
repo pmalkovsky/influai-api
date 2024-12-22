@@ -1,12 +1,310 @@
 openapi: 3.0.0
 info:
-  title: Influ AI Suggestions Generation API
-  description: API documentation for managing content on Influ AI, including suggestions generation, fetching, updates, and downloads.
+  title: InfluAI API
+  description: API documentation for managing content on InfluAI
   version: "1.0"
 
+tags:
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User management
+  - name: subscription
+    description: Subscription management
+  - name: profiles
+    description: Instagram profile management and analysis
+  - name: suggestions
+    description: Content generation and management
+
 paths:
+  # Authentication
+  /login/access-token:
+    post:
+      tags:
+        - auth
+      summary: Login Get Access Token
+      description: OAuth2 compatible token login, get an access token for future requests
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Email
+                password:
+                  type: string
+                  format: password
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '400':
+          description: Incorrect email or password
+
+  # User Management
+  /users:
+    post:
+      tags:
+        - users
+      summary: Create User
+      description: Create new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input or email already registered
+
+  # User Subscription
+  /user/subscription:
+    get:
+      tags:
+        - subscription
+      summary: Get Current User's Subscription
+      description: Get details about current user's subscription status and limits
+      responses:
+        '200':
+          description: Current subscription information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscription:
+                    $ref: '#/components/schemas/Subscription'
+        '404':
+          description: No active subscription found
+      security:
+        - bearerAuth: []
+
+  /user/subscription/confirm:
+    post:
+      tags:
+        - subscription
+      summary: Confirm User's Subscription
+      description: Confirm current user's subscription after successful payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                period:
+                  type: string
+                  enum: ["MONTH", "YEAR"]
+                  description: Subscription period
+                trial:
+                  type: boolean
+                  description: Whether this subscription is obtained through a trial period
+                  default: false
+              required:
+                - period
+      responses:
+        '200':
+          description: Subscription confirmed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '400':
+          description: Invalid subscription parameters
+        '409':
+          description: User already has an active subscription
+      security:
+        - bearerAuth: []
+
+  # Profile Management
+  /profiles:
+    get:
+      tags:
+        - profiles
+      summary: List User's Profiles
+      description: Get a list of all Instagram profiles added by the user
+      responses:
+        '200':
+          description: List of profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Profile'
+      security:
+        - bearerAuth: []
+
+    post:
+      tags:
+        - profiles
+      summary: Create Profile
+      description: Add new Instagram profile for analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Instagram username or profile URL
+              required:
+                - username
+      responses:
+        '202':
+          description: Profile creation initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["SUBMITTED"]
+                  profile_id:
+                    type: string
+                    format: uuid
+
+  /profiles/{profile_id}:
+    delete:
+      tags:
+        - profiles
+      summary: Delete Profile
+      description: Delete the specified profile
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profile deleted successfully
+        '404':
+          description: Profile not found
+      security:
+        - bearerAuth: []
+
+  /profiles/{profile_id}/analysis:
+    get:
+      tags:
+        - profiles
+      summary: Get Profile Analysis
+      description: Get the current analysis for the profile
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profile analysis data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileAnalysis'
+      security:
+        - bearerAuth: []
+    
+    patch:
+      tags:
+        - profiles
+      summary: Update Profile Analysis
+      description: Update one or more fields of the profile analysis
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileAnalysisUpdate'
+      responses:
+        '200':
+          description: Profile analysis updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileAnalysis'
+
+  /profiles/active:
+    get:
+      tags:
+        - profiles
+      summary: Get Active Profile
+      description: Get the currently active Instagram profile
+      responses:
+        '200':
+          description: Currently active profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          description: No active profile found
+      security:
+        - bearerAuth: []
+
+  /profiles/{profile_id}/activate:
+    post:
+      tags:
+        - profiles
+      summary: Set Profile as Active
+      description: Set the specified profile as the active one. Any previously active profile will be deactivated.
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: ID of the profile to activate
+      responses:
+        '200':
+          description: Profile activated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          description: Profile not found
+      security:
+        - bearerAuth: []
+
+  # Content Generation
   /suggestions:
     get:
+      tags:
+        - suggestions
       summary: Fetch User Suggestions (Generations)
       description: Retrieve a paginated list of generated content by the user.
       parameters:
@@ -59,6 +357,8 @@ paths:
 
   /suggestions/{id}:
     get:
+      tags:
+        - suggestions
       summary: Get Suggestion Details
       description: Retrieve detailed information for a specific piece of generated content.
       parameters:
@@ -80,6 +380,8 @@ paths:
 
   /suggestions/generate:
     post:
+      tags:
+        - suggestions
       summary: Generate New Suggestion
       description: Create a new piece of content based on selected options, such as "Smart Script," "Custom Script," or "Video."
       requestBody:
@@ -91,10 +393,11 @@ paths:
               properties:
                 suggestion_type:
                   type: string
-                  enum: ["smart_script", "custom_script", "video"]
+                  enum: ["SMART_SCRIPT", "CUSTOM_SCRIPT", "VIDEO"]
                 user_input:
                   type: string
-                  description: "Details provided by the user for custom requests"
+              required:
+                - suggestion_type
       responses:
         '202':
           description: Suggestion generation initiated successfully.
@@ -116,6 +419,8 @@ paths:
 
   /suggestions/{id}/regenerate:
     post:
+      tags:
+        - suggestions
       summary: Regenerate Suggestion
       description: Initiates a regeneration process for the specified suggestion. This is a non-idempotent operation and may produce a new result with each request.
       parameters:
@@ -153,6 +458,8 @@ paths:
 
   /suggestions/{id}/feedback:
     post:
+      tags:
+        - suggestions
       summary: Content Feedback (Thumbs Up/Down)
       description: Allows users to provide feedback on suggestions, such as a thumbs-up or thumbs-down.
       parameters:
@@ -178,6 +485,87 @@ paths:
       security:
         - bearerAuth: []
 
+  # WebSocket Connections
+  /ws/suggestions/{id}:
+    get:
+      tags:
+        - suggestions
+      summary: WebSocket Connection for Suggestion Status Updates
+      description: |
+        Establishes a WebSocket connection to receive real-time updates about the suggestion generation status.
+        The server will send messages in the following format:
+        - On progress: {"status": "IN_PROGRESS", "timestamp": "2024-04-05T10:30:00Z", "data": {}}
+        - On completion: {"status": "AVAILABLE", "timestamp": "2024-04-05T10:31:00Z", "data": {"suggestion": {<suggestion_object>}}}
+        - On error: {"status": "FAILED", "timestamp": "2024-04-05T10:31:00Z", "data": {"code": "RATE_LIMIT_EXCEEDED", "message": "Error description"}}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: The unique identifier of the suggestion to monitor
+      responses:
+        '101':
+          description: WebSocket handshake successful
+      security:
+        - bearerAuth: []
+
+  /ws/profiles/{profile_id}/analysis:
+    get:
+      tags:
+        - profiles
+      summary: WebSocket Connection for Profile Analysis Updates
+      description: |
+        Establishes a WebSocket connection to receive real-time updates about the profile analysis status.
+        The server will send messages in the following format:
+        - On progress: {"status": "IN_PROGRESS", "timestamp": "2024-04-05T10:30:00Z", "data": {}}
+        - On completion: {"status": "AVAILABLE", "timestamp": "2024-04-05T10:31:00Z", "data": {"analysis": {<profile_analysis_object>}}}
+        - On error: {"status": "FAILED", "timestamp": "2024-04-05T10:31:00Z", "data": {"code": "RATE_LIMIT_EXCEEDED", "message": "Error description"}}
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: The unique identifier of the profile analysis to monitor
+      responses:
+        '101':
+          description: WebSocket handshake successful
+      security:
+        - bearerAuth: []
+
+  # Add new endpoint for updating user settings
+  /user:
+    patch:
+      tags:
+        - users
+      summary: Update Current User
+      description: Update current user's settings like language preference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language:
+                  type: string
+                  enum: ["en", "ru"]
+                  description: Preferred language
+              required:
+                - language
+      responses:
+        '200':
+          description: User settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      security:
+        - bearerAuth: []
+
 components:
   securitySchemes:
     bearerAuth:
@@ -186,6 +574,137 @@ components:
       bearerFormat: JWT
 
   schemas:
+    # Authentication
+    Token:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: "bearer"
+
+    # User Management
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        language:
+          type: string
+          enum: ["en", "ru"]
+          description: User's preferred language
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    UserCreate:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        language:
+          type: string
+          enum: ["en", "ru"]
+          default: "en"
+          description: Preferred language
+      required:
+        - email
+        - password
+
+    # Subscription
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        period:
+          type: string
+          enum: ["MONTH", "YEAR"]
+        trial:
+          type: boolean
+          description: Whether this subscription was obtained through a trial period
+        status:
+          type: string
+          enum: ["ACTIVE"]
+
+    # Profile Management
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          description: Instagram username
+        active:
+          type: boolean
+          description: Whether this profile is active
+        created_at:
+          type: string
+          format: date-time
+
+    ProfileAnalysis:
+      type: object
+      properties:
+        profile_id:
+          type: string
+          format: uuid
+          description: ID of the associated profile
+        status:
+          type: string
+          enum: ["SUBMITTED", "IN_PROGRESS", "AVAILABLE", "FAILED"]
+          example: "AVAILABLE"
+        domain:
+          type: string
+          description: Area of expertise
+        style:
+          type: string
+          description: Post style
+        message:
+          type: string
+          description: Core messages and meanings
+        why_choose_me:
+          type: string
+          description: Why people choose you
+        advice:
+          type: string
+          description: Recommendations
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ProfileAnalysisUpdate:
+      type: object
+      properties:
+        domain:
+          type: string
+        style:
+          type: string
+        message:
+          type: string
+        why_choose_me:
+          type: string
+        advice:
+          type: string
+      minProperties: 1
+
+    # Content Generation
     Suggestion:
       type: object
       properties:
@@ -202,8 +721,8 @@ components:
           example: "2024-04-05"
         status:
           type: string
-          enum: ["submitted", "in_progress", "available"]
-          example: "available"
+          enum: ["SUBMITTED", "IN_PROGRESS", "AVAILABLE", "FAILED"]
+          example: "AVAILABLE"
         title:
           type: string
           example: "Suggestion title"
@@ -224,3 +743,45 @@ components:
               download_url:
                 type: string
                 example: "https://link-to-video-download.mp4"
+
+    # WebSocket Messages
+    WebSocketMessage:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["IN_PROGRESS", "AVAILABLE", "FAILED"]
+        timestamp:
+          type: string
+          format: date-time
+        data:
+          type: object
+          oneOf:
+            - type: object  # Empty object for IN_PROGRESS
+            - type: object  # For AVAILABLE status
+              properties:
+                suggestion:
+                  $ref: '#/components/schemas/Suggestion'
+                profile:
+                  $ref: '#/components/schemas/ProfileAnalysis'
+              oneOf:
+                - required: [suggestion]
+                - required: [profile]
+            - type: object  # For FAILED status
+              properties:
+                code:
+                  type: string
+                  enum: [
+                    "DAILY_LIMIT_EXCEEDED",
+                    "RATE_LIMIT_EXCEEDED",
+                    "GENERATION_FAILED"
+                  ]
+                message:
+                  type: string
+              required:
+                - code
+                - message
+      required:
+        - status
+        - timestamp
+        - data
