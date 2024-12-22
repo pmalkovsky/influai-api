@@ -23,7 +23,7 @@ paths:
       tags:
         - auth
       summary: Login
-      description: OAuth2 compatible token login, get an access token for future requests
+      description: Get an access token for future requests
       requestBody:
         required: true
         content:
@@ -715,39 +715,37 @@ components:
       properties:
         id:
           type: string
-          example: "suggestion_id"
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
         type:
           type: string
-          enum: ["smart_script", "custom_script", "video"]
-          example: "video"
+          enum: ["SMART_SCRIPT", "CUSTOM_SCRIPT", "VIDEO"]
         created_at:
           type: string
-          format: date
-          example: "2024-04-05"
+          format: date-time
         status:
-          type: string
-          enum: ["SUBMITTED", "IN_PROGRESS", "AVAILABLE", "FAILED"]
-          example: "AVAILABLE"
+          $ref: '#/components/schemas/Status'
         title:
           type: string
-          example: "Suggestion title"
         text:
           type: string
-          example: "Description of the suggestion"
         media:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-                example: "example_video_1"
-              thumbnail_url:
-                type: string
-                example: "https://link-to-thumbnail.jpg"
-              download_url:
-                type: string
-                example: "https://link-to-video-download.mp4"
+            $ref: '#/components/schemas/Media'
+
+    Media:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        thumbnail_url:
+          type: string
+          format: uri
+        download_url:
+          type: string
+          format: uri
 
     # WebSocket Messages
     WebSocketMessage:
@@ -790,3 +788,41 @@ components:
         - status
         - timestamp
         - data
+
+    # Common schemas
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+
+    PaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        pagination:
+          type: object
+          properties:
+            total_items:
+              type: integer
+            limit:
+              type: integer
+            offset:
+              type: integer
+            has_more:
+              type: boolean
+      required:
+        - data
+        - pagination
+
+    Status:
+      type: string
+      enum: ["SUBMITTED", "IN_PROGRESS", "AVAILABLE", "FAILED"]
