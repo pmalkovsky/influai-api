@@ -454,57 +454,6 @@ paths:
       security:
         - bearerAuth: []
 
-  # WebSocket Connections
-  /ws/suggestions/{id}:
-    get:
-      tags:
-        - suggestions
-      summary: WebSocket Connection for Suggestion Status Updates
-      description: |
-        Establishes a WebSocket connection to receive real-time updates about the suggestion generation status.
-        The server will send messages in the following format:
-        - On progress: {"status": "IN_PROGRESS", "timestamp": "2024-04-05T10:30:00Z", "data": {}}
-        - On completion: {"status": "AVAILABLE", "timestamp": "2024-04-05T10:31:00Z", "data": {"suggestion": {<suggestion_object>}}}
-        - On error: {"status": "FAILED", "timestamp": "2024-04-05T10:31:00Z", "data": {"code": "RATE_LIMIT_EXCEEDED", "message": "Error description"}}
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            description: The unique identifier of the suggestion to monitor
-      responses:
-        '101':
-          description: WebSocket handshake successful
-      security:
-        - bearerAuth: []
-
-  /ws/profiles/{profile_id}/analysis:
-    get:
-      tags:
-        - profiles
-      summary: WebSocket Connection for Profile Analysis Updates
-      description: |
-        Establishes a WebSocket connection to receive real-time updates about the profile analysis status.
-        The server will send messages in the following format:
-        - On progress: {"status": "IN_PROGRESS", "timestamp": "2024-04-05T10:30:00Z", "data": {}}
-        - On completion: {"status": "AVAILABLE", "timestamp": "2024-04-05T10:31:00Z", "data": {"analysis": {<profile_analysis_object>}}}
-        - On error: {"status": "FAILED", "timestamp": "2024-04-05T10:31:00Z", "data": {"code": "RATE_LIMIT_EXCEEDED", "message": "Error description"}}
-      parameters:
-        - name: profile_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            description: The unique identifier of the profile analysis to monitor
-      responses:
-        '101':
-          description: WebSocket handshake successful
-      security:
-        - bearerAuth: []
-
   # Add new endpoint for updating user settings
   /user:
     get:
@@ -756,48 +705,6 @@ components:
         download_url:
           type: string
           format: uri
-
-    # WebSocket Messages
-    WebSocketMessage:
-      type: object
-      properties:
-        status:
-          type: string
-          enum: ["IN_PROGRESS", "AVAILABLE", "FAILED"]
-        timestamp:
-          type: string
-          format: date-time
-        data:
-          type: object
-          oneOf:
-            - type: object  # Empty object for IN_PROGRESS
-            - type: object  # For AVAILABLE status
-              properties:
-                suggestion:
-                  $ref: '#/components/schemas/Suggestion'
-                profile:
-                  $ref: '#/components/schemas/ProfileAnalysis'
-              oneOf:
-                - required: [suggestion]
-                - required: [profile]
-            - type: object  # For FAILED status
-              properties:
-                code:
-                  type: string
-                  enum: [
-                    "DAILY_LIMIT_EXCEEDED",
-                    "RATE_LIMIT_EXCEEDED",
-                    "GENERATION_FAILED"
-                  ]
-                message:
-                  type: string
-              required:
-                - code
-                - message
-      required:
-        - status
-        - timestamp
-        - data
 
     # Common schemas
     Error:
